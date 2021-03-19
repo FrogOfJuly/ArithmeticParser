@@ -1,0 +1,15 @@
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.csprojAssemblyReference.cache
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.GeneratedMSBuildEditorConfig.editorconfig
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.AssemblyInfoInputs.cache
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.AssemblyInfo.cs
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.csproj.CoreCompileInputs.cache
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ArithmeticParser.deps.json
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ArithmeticParser.runtimeconfig.json
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ArithmeticParser.runtimeconfig.dev.json
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ArithmeticParser.dll
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ref/ArithmeticParser.dll
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/bin/Debug/net5.0/ArithmeticParser.pdb
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.dll
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ref/ArithmeticParser.dll
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.pdb
+/Users/kirill/RiderProjects/ArithmeticParser/ArithmeticParser/obj/Debug/net5.0/ArithmeticParser.genruntimeconfig.cache
