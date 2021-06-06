@@ -1,151 +1,153 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 using NUnit.Framework;
+using Antlr4.Runtime;
+using System.Linq;
 
 namespace ArithmeticTree
 {
-    public interface IExpressionVisitor
+    public class EvalVisitor : ArithmeticsBaseVisitor<int>
     {
-        void Visit(Literal expression);
-        void Visit(Variable expression);
-        void Visit(BinaryExpression expression);
-        void Visit(ParenExpression expression);
-    }
-
-    public class DumpVisitor : IExpressionVisitor
-    {
-        private readonly StringBuilder myBuilder;
-
-        public DumpVisitor()
+        public override int VisitOpExpr(ArithmeticsParser.OpExprContext context)
         {
-            myBuilder = new StringBuilder();
+            int left = Visit(context.left);
+            int right = Visit(context.right);
+            string op = context.op.Text;
+            switch (op[0])
+            {
+                case '*': return left * right;
+                case '/': return left / right;
+                case '+': return left + right;
+                case '-': return left - right;
+                default: throw new InvalidDataException("Unknown operator " + op);
+            }
         }
 
-        public void Visit(Literal expression)
+        public override int VisitAtomExpr(ArithmeticsParser.AtomExprContext context)
         {
-            myBuilder.Append("Literal(" + expression.Value + ")");
+            return int.Parse(context.atom.Text);
         }
 
-        public void Visit(Variable expression)
+        public override int VisitParenExpr(ArithmeticsParser.ParenExprContext context)
         {
-            myBuilder.Append("Variable(" + expression.Name + ")");
-        }
-
-        public void Visit(BinaryExpression expression)
-        {
-            myBuilder.Append("Binary(");
-            expression.FirstOperand.Accept(this);
-            myBuilder.Append(expression.Operator);
-            expression.SecondOperand.Accept(this);
-            myBuilder.Append(")");
-        }
-
-        public void Visit(ParenExpression expression)
-        {
-            myBuilder.Append("Paren(");
-            expression.Operand.Accept(this);
-            myBuilder.Append(")");
-        }
-
-        public override string ToString()
-        {
-            return myBuilder.ToString();
+            return Visit(context.expr());
         }
     }
 
+    public class DumpVisitor : ArithmeticsBaseVisitor<string>
+    {
+        public override string VisitOpExpr(ArithmeticsParser.OpExprContext context)
+        {
+            string left = Visit(context.left);
+            string right = Visit(context.right);
+            string op = context.op.Text;
+            switch (op[0])
+            {
+                case '*': return "MultOP(" + left + ", " + right + ")";
+                case '/': return "DivOP(" + left + ", " + right + ")";
+                case '+': return "AddOP(" + left + ", " + right + ")";
+                case '-': return "SubOP(" + left + ", " + right + ")";
+                default: throw new InvalidDataException("Unknown operator " + op);
+            }
+        }
+
+        public override string VisitAtomExpr(ArithmeticsParser.AtomExprContext context)
+        {
+            return "Atom(" + context.atom.Text + ")";
+        }
+
+        public override string VisitParenExpr(ArithmeticsParser.ParenExprContext context)
+        {
+            return "ParenOP(" + Visit(context.expr()) + ")";
+        }
+    }
+
+    [TestFixture]
     public class Tests
     {
-        [SetUp]
-        public void Setup()
+        private ArithmeticsParser parser;
+        private EvalVisitor evis;
+        private DumpVisitor dvis;
+
+        private void Setup(string text)
         {
+            var inputStream = new AntlrInputStream(text);
+            var lexer = new ArithmeticsLexer(inputStream);
+            var tokens = new CommonTokenStream(lexer);
+            parser = new ArithmeticsParser(tokens);
+            evis = new EvalVisitor();
+            dvis = new DumpVisitor();
         }
 
         [Test]
         public void Test1()
         {
-            var dumpVisitor = new DumpVisitor();
-            new BinaryExpression(new Literal("1"), new Literal("2"), "+").Accept(dumpVisitor);
-            Assert.AreEqual("Binary(Literal(1)+Literal(2))", dumpVisitor.ToString());
-            
+            Setup("1");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            Assert.AreEqual(res, 1);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual("Atom(1)", sres);
             Assert.Pass();
         }
 
         [Test]
         public void Test2()
         {
-            var line = "1 + 2"; 
-            line = Parser.Preprocess(line);
-            var pices = Parser.SplitString(line);
-            var reveredPolskiNot = Parser.ReversePolskiNotation(pices);
-            // foreach (string item in reveredPolskiNot)
-            // {
-            //     Console.WriteLine(item);
-            // }
-
-            var end = 0;
-            var res = Parser.Evaluate(reveredPolskiNot, out end, 0);
-            var dumpVisitor = new DumpVisitor();
-            res.Accept(dumpVisitor);
-            Assert.AreEqual("Binary(Literal(1)+Literal(2))", dumpVisitor.ToString());
+            Setup("1 + 2*3");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual(res, 7);
+            Assert.AreEqual("AddOP(Atom(1), MultOP(Atom(2), Atom(3)))", sres);
             Assert.Pass();
         }
-        
+
         [Test]
         public void Test3()
         {
-            var line = "(1 + 2) + 4"; 
-            line = Parser.Preprocess(line);
-            var pices = Parser.SplitString(line);
-            var reveredPolskiNot = Parser.ReversePolskiNotation(pices);
-            // foreach (string item in reveredPolskiNot)
-            // {
-            //     Console.WriteLine(item);
-            // }
-
-            var end = 0;
-            var res = Parser.Evaluate(reveredPolskiNot, out end, 0);
-            var dumpVisitor = new DumpVisitor();
-            res.Accept(dumpVisitor);
-            Assert.AreEqual("Binary(Binary(Literal(1)+Literal(2))+Literal(4))", dumpVisitor.ToString());
+            Setup("(1 + 2)*3");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual(res, 9);
+            Assert.AreEqual("MultOP(ParenOP(AddOP(Atom(1), Atom(2))), Atom(3))", sres);
             Assert.Pass();
         }
 
         [Test]
         public void Test4()
         {
-            var line = "(1 + 2) * 4"; 
-            line = Parser.Preprocess(line);
-            var pices = Parser.SplitString(line);
-            var reveredPolskiNot = Parser.ReversePolskiNotation(pices);
-            // foreach (string item in reveredPolskiNot)
-            // {
-            //     Console.WriteLine(item);
-            // }
-
-            var end = 0;
-            var res = Parser.Evaluate(reveredPolskiNot, out end, 0);
-            var dumpVisitor = new DumpVisitor();
-            res.Accept(dumpVisitor);
-            Assert.AreEqual("Binary(Binary(Literal(1)+Literal(2))*Literal(4))", dumpVisitor.ToString());
+            Setup("3*(1 + 2)");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual(res, 9);
+            Assert.AreEqual("MultOP(Atom(3), ParenOP(AddOP(Atom(1), Atom(2))))", sres);
             Assert.Pass();
         }
-        
+
         [Test]
         public void Test5()
         {
-            var line = "1 + 2 * 4"; 
-            line = Parser.Preprocess(line);
-            var pices = Parser.SplitString(line);
-            var reveredPolskiNot = Parser.ReversePolskiNotation(pices);
-            // foreach (string item in reveredPolskiNot)
-            // {
-            //     Console.WriteLine(item);
-            // }
+            Setup("1 + 3*(1 + 2) + 2");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual(res, 12);
+            Assert.AreEqual("AddOP(AddOP(Atom(1), MultOP(Atom(3), ParenOP(AddOP(Atom(1), Atom(2))))), Atom(2))", sres);
+            Assert.Pass();
+        }
 
-            var end = 0;
-            var res = Parser.Evaluate(reveredPolskiNot, out end, 0);
-            var dumpVisitor = new DumpVisitor();
-            res.Accept(dumpVisitor);
-            Assert.AreEqual("Binary(Literal(1)+Binary(Literal(2)*Literal(4)))", dumpVisitor.ToString());
+        [Test]
+        public void Test6()
+        {
+            Setup("1 + 3*3 + 7 + 2");
+            var tree = parser.expr();
+            var res = evis.Visit(tree);
+            var sres = dvis.Visit(tree);
+            Assert.AreEqual(res, 19);
+            Assert.AreEqual("AddOP(AddOP(AddOP(Atom(1), MultOP(Atom(3), Atom(3))), Atom(7)), Atom(2))", sres);
             Assert.Pass();
         }
     }
